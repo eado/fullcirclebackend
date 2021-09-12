@@ -1,0 +1,3 @@
+[submodule "fullcircle"]
+	path = fullcircle
+	url = https://github.com/eado/fullcircle
