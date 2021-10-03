@@ -12,12 +12,8 @@ var responder_1 = __importDefault(require("./responder"));
 var mongodb_1 = require("mongodb");
 var url_1 = __importDefault(require("url"));
 var path_1 = __importDefault(require("path"));
-try {
-    execSync("mongod --dbpath /var/data/db &");
-}
-catch (_a) { }
-var client = new mongodb_1.MongoClient("mongodb://localhost:27017", { useUnifiedTopology: true });
 var config = JSON.parse(fs_1.default.readFileSync("config.json").toString());
+var client = new mongodb_1.MongoClient(config.prod ? config.mongodb : "mongodb://localhost:27017", { useUnifiedTopology: true });
 var httpserver;
 var filesystem = function (req, res) {
     var _a;
@@ -71,7 +67,7 @@ var filesystem = function (req, res) {
     });
 };
 var realserver;
-if (config.prod) {
+if (config.prod2) {
     realserver = https_1.default.createServer({
         cert: fs_1.default.readFileSync(config.cert),
         key: fs_1.default.readFileSync(config.key)
@@ -102,12 +98,12 @@ var interval = setInterval(function ping() {
     });
 }, 30000);
 client.connect(function () {
-    if (config.prod) {
+    if (config.prod2) {
         httpserver.listen(80);
         realserver.listen(443);
     }
     else {
-        realserver.listen(80);
+        realserver.listen(process.env.PORT || 8080);
     }
     // Index creation
     var db = client.db("fullcircle");

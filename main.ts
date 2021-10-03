@@ -9,13 +9,10 @@ import { MongoClient } from 'mongodb';
 import url from 'url'
 import path from 'path'
 
-try {
-  execSync("mongod --dbpath /var/data/db &")
-} catch {}
-
-const client = new MongoClient("mongodb://localhost:27017", { useUnifiedTopology: true })
 
 const config = JSON.parse(fs.readFileSync("config.json").toString())
+
+const client = new MongoClient(config.prod ? config.mongodb : "mongodb://localhost:27017", { useUnifiedTopology: true })
 
 let httpserver: http.Server;
 
@@ -73,7 +70,7 @@ const filesystem = (req: any, res: any) => {
 }
 
 let realserver: http.Server | https.Server;
-if (config.prod) {
+if (config.prod2) {
   realserver = https.createServer({
       cert: fs.readFileSync(config.cert),
       key: fs.readFileSync(config.key)
@@ -111,11 +108,11 @@ wss.clients.forEach(function each(ws: any) {
 }, 30000);
 
 client.connect(() => {
-    if (config.prod) {
+    if (config.prod2) {
       httpserver.listen(80)
       realserver.listen(443)
     } else {
-      realserver.listen(80)
+      realserver.listen(process.env.PORT || 8080)
     }
 
     // Index creation

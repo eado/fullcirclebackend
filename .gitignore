@@ -4,3 +4,4 @@ test.*
 config.json
 userimages
 .DS_Store
+build
