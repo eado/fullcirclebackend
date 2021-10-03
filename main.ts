@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import http from 'http';
 import fs from 'fs';
 import responder from './responder';
-import { MongoClient } from 'mongodb';
+import { Binary, MongoClient } from 'mongodb';
 import url from 'url'
 import path from 'path'
 
@@ -12,6 +12,8 @@ import path from 'path'
 const config = JSON.parse(fs.readFileSync("config.json").toString())
 
 const client = new MongoClient((process.env.NODE_ENV === "production") ? config.mongodb : "mongodb://localhost:27017", { useUnifiedTopology: true })
+
+let handleImage = (res: any, image: string) => {}
 
 const filesystem = (req: any, res: any) => {
   console.log(`${req.method} ${req.url}`);
@@ -21,7 +23,8 @@ const filesystem = (req: any, res: any) => {
   // extract URL path
   let pathname = `./fullcircle/build${parsedUrl.pathname}`;
   if (parsedUrl.pathname?.startsWith("/userimages")) {
-    pathname = `.${parsedUrl.pathname}`
+    handleImage(res, parsedUrl.pathname.substr(12))
+    return
   }
   // based on the URL path, extract the file extension. e.g. .js, .doc, ...
   const ext = path.parse(pathname).ext;
@@ -100,6 +103,19 @@ client.connect(() => {
     
     const auth = db.collection("auth")
     auth.createIndex({"uuid": 1}, {unique: true})
+
+    const images = db.collection("images")
+    handleImage = async (res: any, image: string) => {
+      const data = await images.findOne({filename: image})
+      if (data) {
+        res.setHeader('Content-type', 'image/jpeg');
+        res.end((data.data as Binary).buffer)
+      } else {
+        res.statusCode = 404;
+        res.end(`File ${image} not found!`);
+      }
+    }
+
     console.log(`WebSocket server listening on port ${port}...`)
 })
 

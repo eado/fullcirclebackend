@@ -33,6 +33,7 @@ export default async (message: any, ws: WebSocket, db: Db) => {
     const auth = db.collection("auth")
     const users = db.collection("users")
     const appointments = db.collection("appointments")
+    const images = db.collection("images")
 
     if (message.request === "auth") {
         try {
@@ -105,9 +106,11 @@ export default async (message: any, ws: WebSocket, db: Db) => {
         },
         updateImage: () => {
             const imageData = message.image.replace(/^data:image\/\w+;base64,/, '')
-            const imagePath = `./userimages/${uuidv4()}.jpg`
-            if (!fs.existsSync("./userimages")) fs.mkdirSync("./userimages")
-            fs.writeFileSync(imagePath, imageData, {encoding: 'base64'})
+            const uuid = uuidv4()
+            const imagePath = `./userimages/${uuid}.jpg`
+            // if (!fs.existsSync("./userimages")) fs.mkdirSync("./userimages")
+            // fs.writeFileSync(imagePath, imageData, {encoding: 'base64'})
+            images.insertOne({filename: `${uuid}.jpg`, data: Buffer.from(imageData, "base64")})
             users.updateOne({email}, {$set: {pfp: imagePath.substr(1)}})
             sendSuccess()
         },
