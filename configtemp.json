@@ -1,7 +1,4 @@
 {
-    "cert": "",
-    "key": "",
     "CLIENT_ID": "",
-    "prod": true,
     "mongodb": ""
 }

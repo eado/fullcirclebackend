@@ -1,7 +1,6 @@
 console.log("Starting fullcircle server...")
 
 import WebSocket from 'ws';
-import https from 'https';
 import http from 'http';
 import fs from 'fs';
 import responder from './responder';
@@ -12,9 +11,7 @@ import path from 'path'
 
 const config = JSON.parse(fs.readFileSync("config.json").toString())
 
-const client = new MongoClient(config.prod ? config.mongodb : "mongodb://localhost:27017", { useUnifiedTopology: true })
-
-let httpserver: http.Server;
+const client = new MongoClient((process.env.NODE_ENV === "production") ? config.mongodb : "mongodb://localhost:27017", { useUnifiedTopology: true })
 
 const filesystem = (req: any, res: any) => {
   console.log(`${req.method} ${req.url}`);
@@ -69,19 +66,7 @@ const filesystem = (req: any, res: any) => {
   });
 }
 
-let realserver: http.Server | https.Server;
-if (config.prod2) {
-  realserver = https.createServer({
-      cert: fs.readFileSync(config.cert),
-      key: fs.readFileSync(config.key)
-  }, filesystem)
-
-  httpserver = http.createServer({}, (_, res) => {
-    res.end(`<head><meta http-equiv="Refresh" content="0; URL=https://myfullcircle.app"></head>`)
-  })
-} else {
-  realserver = http.createServer(filesystem)
-}
+const realserver = http.createServer(filesystem)
 
 const wss = new WebSocket.Server({server: realserver})
 
@@ -108,32 +93,14 @@ wss.clients.forEach(function each(ws: any) {
 }, 30000);
 
 client.connect(() => {
-    if (config.prod2) {
-      httpserver.listen(80)
-      realserver.listen(443)
-    } else {
-      realserver.listen(process.env.PORT || 8080)
-    }
+    const port = (process.env.NODE_ENV === "production") ? (process.env.PORT || 8080) : 80
+    realserver.listen(port)
 
-    // Index creation
     const db = client.db("fullcircle");
-
-    // const products = db.collection("products")
-    // products.createIndex({'sku': 1}, {unique: true})
-    // products.createIndex({'name': "text", "brand": "text"})
-    // products.createIndex({'category': 1, 'subcategory': 1})
-
-    // const categories = db.collection("categories")
-    // categories.createIndex({'name': 1}, {unique: true})
-
-    // const orders = db.collection("orders")
-    // orders.createIndex({'timestamp': -1})
-    // orders.createIndex({'uuid': 1}, {unique: true})
-    // orders.createIndex({'name': 1})
     
     const auth = db.collection("auth")
     auth.createIndex({"uuid": 1}, {unique: true})
-    console.log(`WebSocket server listening on port ${config.prod ? 443 : 80}...`)
+    console.log(`WebSocket server listening on port ${port}...`)
 })
 
 function execSync(arg0: string) {
