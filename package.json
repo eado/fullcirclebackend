@@ -1,16 +1,17 @@
 {
-  "name": "horwitzbackend",
+  "name": "fullcirclebackend",
   "version": "1.0.0",
-  "description": "Node.JS backend for Horwitz app",
+  "description": "Node.JS backend for fullcircle app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eado/horwitz"
+    "url": "https://github.com/eado/fullcirclebackend"
   },
   "main": "main.js",
   "dependencies": {
     "@types/mongodb": "^3.3.12",
     "@types/nodemailer": "^6.4.0",
     "@types/ws": "^6.0.4",
+    "google-auth-library": "^7.9.1",
     "moment": "^2.24.0",
     "mongodb": "^3.4.0",
     "nodemailer": "^6.4.2",
